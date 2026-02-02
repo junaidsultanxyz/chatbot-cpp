@@ -8,11 +8,43 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <cstring>
+#include <fcntl.h>
 
 class TmuxManager {
 private:
     bool answerPanelOpen;
     std::string sessionName;
+
+    // Helper function to execute tmux command using fork + exec
+    int executeTmuxCommand(const char* arg1, const char* arg2 = nullptr, 
+                          const char* arg3 = nullptr, const char* arg4 = nullptr) {
+        pid_t pid = fork();
+        
+        if (pid < 0) {
+            std::cerr << "Fork failed\n";
+            return -1;
+        }
+        
+        if (pid == 0) {
+            // Child process - execute tmux command
+            if (arg4) {
+                execl("/usr/bin/tmux", "tmux", arg1, arg2, arg3, arg4, (char*)NULL);
+            } else if (arg3) {
+                execl("/usr/bin/tmux", "tmux", arg1, arg2, arg3, (char*)NULL);
+            } else if (arg2) {
+                execl("/usr/bin/tmux", "tmux", arg1, arg2, (char*)NULL);
+            } else {
+                execl("/usr/bin/tmux", "tmux", arg1, (char*)NULL);
+            }
+            // If exec fails
+            exit(1);
+        }
+        
+        // Parent process - wait for child
+        int status;
+        waitpid(pid, &status, 0);
+        return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+    }
 
 public:
     TmuxManager() : answerPanelOpen(false), sessionName("chatbot_session") {}
@@ -22,12 +54,34 @@ public:
         return getenv("TMUX") != nullptr;
     }
 
-    // Kill existing chatbot session if it exists
+    // Kill existing chatbot session if it exists using fork + exec
     void killExistingSession() {
-        std::string checkCmd = "tmux has-session -t " + sessionName + " 2>/dev/null";
-        if (system(checkCmd.c_str()) == 0) {
-            std::string killCmd = "tmux kill-session -t " + sessionName;
-            system(killCmd.c_str());
+        // Check if session exists using fork + exec
+        pid_t pid = fork();
+        
+        if (pid < 0) {
+            return; // Fork failed, skip cleanup
+        }
+        
+        if (pid == 0) {
+            // Child process - check session existence
+            // Redirect stderr to /dev/null
+            int devnull = open("/dev/null", O_WRONLY);
+            dup2(devnull, STDERR_FILENO);
+            close(devnull);
+            
+            execl("/usr/bin/tmux", "tmux", "has-session", "-t", 
+                  sessionName.c_str(), (char*)NULL);
+            exit(1);
+        }
+        
+        // Parent process - wait and check exit status
+        int status;
+        waitpid(pid, &status, 0);
+        
+        // If session exists (exit code 0), kill it
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            executeTmuxCommand("kill-session", "-t", sessionName.c_str());
         }
     }
 
@@ -47,6 +101,7 @@ public:
             }
             
             // Start new tmux session and re-run the program
+            // This needs system() due to complex shell syntax with quotes and &&
             std::string cmd = "tmux new-session -s " + sessionName + " \"" + 
                             std::string(exePath) + " && exec $SHELL\"";
             system(cmd.c_str());
@@ -54,15 +109,14 @@ public:
         }
     }
 
-    // Check if pane 1 exists
+    // Check if pane 1 exists (uses system due to pipe and grep)
     bool paneExists() {
         return system("tmux list-panes | grep -q '^1:'") == 0;
     }
 
-    // Kill the tmux session
+    // Kill the tmux session using fork + exec
     void killSession() {
-        std::string cmd = "tmux kill-session -t " + sessionName;
-        system(cmd.c_str());
+        executeTmuxCommand("kill-session", "-t", sessionName.c_str());
     }
 
     // Open answer panel using tmux split
@@ -85,6 +139,7 @@ public:
         file.close();
 
         // Split window horizontally and display answer
+        // Uses system() due to complex shell syntax with nested quotes and &&
         std::string cmd = "tmux split-window -h 'cat " + tempFile + 
                          " && echo \"\" && echo \"Press Enter to continue...\" && read'";
         system(cmd.c_str());
@@ -99,17 +154,17 @@ public:
         file << answer;
         file.close();
 
-        // Send keys to the answer pane
+        // Send keys to the answer pane (uses system() due to complex command construction)
         system("tmux send-keys -t 1 C-c");
         std::string cmd = "tmux send-keys -t 1 'cat " + tempFile + 
                          " && echo \"\" && echo \"Press Enter to continue...\" && read' Enter";
         system(cmd.c_str());
     }
 
-    // Close answer panel
+    // Close answer panel using fork + exec
     void closeAnswerPanel() {
         if (paneExists()) {
-            system("tmux kill-pane -t 1");
+            executeTmuxCommand("kill-pane", "-t", "1");
             std::cout << "Answer panel closed.\n";
         }
         answerPanelOpen = false;
