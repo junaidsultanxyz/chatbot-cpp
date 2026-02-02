@@ -1,0 +1,32 @@
+Title: conversation_1770056931
+Date: 2026-02-02 23:29:15
+=====================================
+
+[2026-02-02 23:27:01] user: list convo
+
+[2026-02-02 23:27:23] user: pipes
+
+[2026-02-02 23:27:23] bot: Answer not found
+
+[2026-02-02 23:27:25] user: pipe
+
+[2026-02-02 23:27:25] bot: Answer not found
+
+[2026-02-02 23:27:27] user: what are pipes
+
+[2026-02-02 23:27:27] bot: Pipes are a method of inter-process communication (IPC) that allow data to flow from one process to another. The pipe() system call creates a unidirectional communication channel where one process writes to the pipe and another reads from it.
+
+[2026-02-02 23:27:46] user: what is fork
+
+[2026-02-02 23:27:47] bot: fork() is a system call that creates a new process by duplicating the calling process. The new process is called the child process, and it runs concurrently with the parent process.
+
+[2026-02-02 23:28:09] user: close
+
+[2026-02-02 23:28:09] bot: Panel closed
+
+[2026-02-02 23:28:27] user: what is tmux
+
+[2026-02-02 23:28:27] bot: Tmux is a terminal multiplexer that allows you to create, access, and control multiple terminals from a single screen. It's useful for managing multiple terminal sessions.
+
+[2026-02-02 23:29:15] user: exit
+
