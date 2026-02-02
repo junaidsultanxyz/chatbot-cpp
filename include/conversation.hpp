@@ -91,13 +91,14 @@ public:
         filename = "";
     }
 
-    static void listConversations() {
+    static std::vector<std::string> listConversations() {
         const std::string SAVE_DIR = "conversations/";
         DIR* dir = opendir(SAVE_DIR.c_str());
+        std::vector<std::string> conversations;
         
         if (!dir) {
             std::cout << "No previous conversations found.\n";
-            return;
+            return conversations;
         }
 
         std::cout << "\n=== Previous Conversations ===\n";
@@ -107,7 +108,9 @@ public:
         while ((entry = readdir(dir)) != nullptr) {
             std::string fname = entry->d_name;
             if (fname.length() > 4 && fname.substr(fname.length() - 4) == ".txt") {
-                std::cout << ++count << ". " << fname.substr(0, fname.length() - 4) << "\n";
+                std::string title = fname.substr(0, fname.length() - 4);
+                conversations.push_back(title);
+                std::cout << ++count << ". " << title << "\n";
             }
         }
         
@@ -115,6 +118,7 @@ public:
         if (count == 0) {
             std::cout << "No conversations found.\n";
         }
+        return conversations;
     }
 
     static void loadConversation(const std::string& conversationTitle) {
@@ -132,6 +136,32 @@ public:
             std::cout << line << "\n";
         }
         file.close();
+    }
+
+    static std::string getConversationByNumber(int number) {
+        const std::string SAVE_DIR = "conversations/";
+        DIR* dir = opendir(SAVE_DIR.c_str());
+        
+        if (!dir) {
+            return "";
+        }
+
+        struct dirent* entry;
+        int count = 0;
+        std::string result;
+        
+        while ((entry = readdir(dir)) != nullptr) {
+            std::string fname = entry->d_name;
+            if (fname.length() > 4 && fname.substr(fname.length() - 4) == ".txt") {
+                if (++count == number) {
+                    result = fname.substr(0, fname.length() - 4);
+                    break;
+                }
+            }
+        }
+        
+        closedir(dir);
+        return result;
     }
 };
 

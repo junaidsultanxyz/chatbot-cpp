@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <cstring>
 
 class TmuxManager {
 private:
@@ -21,19 +22,56 @@ public:
         return getenv("TMUX") != nullptr;
     }
 
+    // Kill existing chatbot session if it exists
+    void killExistingSession() {
+        std::string checkCmd = "tmux has-session -t " + sessionName + " 2>/dev/null";
+        if (system(checkCmd.c_str()) == 0) {
+            std::string killCmd = "tmux kill-session -t " + sessionName;
+            system(killCmd.c_str());
+        }
+    }
+
     // Start tmux session if not already in one
     void ensureTmuxSession() {
         if (!isInTmux()) {
+            // Kill any existing chatbot session first
+            killExistingSession();
+            
+            // Get the current executable path
+            char exePath[1024];
+            ssize_t len = readlink("/proc/self/exe", exePath, sizeof(exePath)-1);
+            if (len != -1) {
+                exePath[len] = '\0';
+            } else {
+                strcpy(exePath, "./bin/chatbot");
+            }
+            
             // Start new tmux session and re-run the program
             std::string cmd = "tmux new-session -s " + sessionName + " \"" + 
-                            std::string(getenv("_")) + " && exec $SHELL\"";
+                            std::string(exePath) + " && exec $SHELL\"";
             system(cmd.c_str());
             exit(0);
         }
     }
 
+    // Check if pane 1 exists
+    bool paneExists() {
+        return system("tmux list-panes | grep -q '^1:'") == 0;
+    }
+
+    // Kill the tmux session
+    void killSession() {
+        std::string cmd = "tmux kill-session -t " + sessionName;
+        system(cmd.c_str());
+    }
+
     // Open answer panel using tmux split
     void openAnswerPanel(const std::string& answer) {
+        // Check if pane actually exists, reset flag if it doesn't
+        if (!paneExists()) {
+            answerPanelOpen = false;
+        }
+        
         if (answerPanelOpen) {
             // If panel is already open, update it
             updateAnswerPanel(answer);
@@ -70,11 +108,11 @@ public:
 
     // Close answer panel
     void closeAnswerPanel() {
-        if (!answerPanelOpen) return;
-        
-        system("tmux kill-pane -t 1");
+        if (paneExists()) {
+            system("tmux kill-pane -t 1");
+            std::cout << "Answer panel closed.\n";
+        }
         answerPanelOpen = false;
-        std::cout << "Answer panel closed.\n";
     }
 
     bool isPanelOpen() const {

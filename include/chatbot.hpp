@@ -13,6 +13,9 @@ private:
     std::vector<std::string> closeCommands;
     std::vector<std::string> newConversationCommands;
     std::vector<std::string> listCommands;
+    std::vector<std::string> listQuestionCommands;
+    std::vector<std::string> saveCommands;
+    std::vector<std::string> clearCommands;
 
     void initializeQuestions() {
         // Add your hardcoded questions and answers here
@@ -71,8 +74,11 @@ private:
     void initializeCommands() {
         exitCommands = {"exit", "quit", "bye", "goodbye"};
         closeCommands = {"close panel", "close", "hide answer"};
-        newConversationCommands = {"new conversation", "start new", "restart", "clear"};
-        listCommands = {"list conversations", "show conversations", "list", "history"};
+        newConversationCommands = {"new conversation", "start new", "restart", "new"};
+        listCommands = {"list convo"};
+        listQuestionCommands = {"list question"};
+        saveCommands = {"save"};
+        clearCommands = {"clear"};
     }
 
     bool matchesAnyCommand(const std::string& input, const std::vector<std::string>& commands) {
@@ -118,6 +124,40 @@ public:
 
     bool isListCommand(const std::string& input) {
         return matchesAnyCommand(input, listCommands);
+    }
+
+    bool isListQuestionCommand(const std::string& input) {
+        return matchesAnyCommand(input, listQuestionCommands);
+    }
+
+    bool isSaveCommand(const std::string& input) {
+        return matchesAnyCommand(input, saveCommands);
+    }
+
+    bool isClearCommand(const std::string& input) {
+        return matchesAnyCommand(input, clearCommands);
+    }
+
+    void listQuestions() {
+        std::cout << "\n=== Available Questions ===\n";
+        int count = 0;
+        for (const auto& pair : questionBank) {
+            std::cout << ++count << ". " << pair.first << "\n";
+        }
+    }
+
+    std::string getQuestionByNumber(int number) {
+        if (number < 1 || number > questionBank.size()) {
+            return "";
+        }
+        
+        int count = 0;
+        for (const auto& pair : questionBank) {
+            if (++count == number) {
+                return pair.first;
+            }
+        }
+        return "";
     }
 
     void addQuestion(const std::string& question, const std::string& answer) {
