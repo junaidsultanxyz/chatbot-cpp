@@ -1,5 +1,5 @@
 Title: conversation_1770056931
-Date: 2026-02-02 23:29:15
+Date: 2026-02-03 00:19:12
 =====================================
 
 [2026-02-02 23:27:01] user: list convo
@@ -29,4 +29,18 @@ Date: 2026-02-02 23:29:15
 [2026-02-02 23:28:27] bot: Tmux is a terminal multiplexer that allows you to create, access, and control multiple terminals from a single screen. It's useful for managing multiple terminal sessions.
 
 [2026-02-02 23:29:15] user: exit
+
+[2026-02-03 00:18:29] user: what is fork
+
+[2026-02-03 00:18:29] bot: fork() is a system call that creates a new process by duplicating the calling process. The new process is called the child process, and it runs concurrently with the parent process.
+
+[2026-02-03 00:18:34] user: what is tmux
+
+[2026-02-03 00:18:34] bot: Tmux is a terminal multiplexer that allows you to create, access, and control multiple terminals from a single screen. It's useful for managing multiple terminal sessions.
+
+[2026-02-03 00:18:53] user: what is exec
+
+[2026-02-03 00:18:53] bot: The exec family of functions replaces the current process image with a new program. Common variants include: execl(), execv(), execle(), execve(), execlp(), execvp(). They differ in how arguments are passed (list vs array) and whether they use PATH or environment variables. After exec, the new program runs in the same process ID.
+
+[2026-02-03 00:19:12] user: exit
 

@@ -163,6 +163,68 @@ public:
         closedir(dir);
         return result;
     }
+
+    bool loadConversationIntoSession(const std::string& conversationTitle) {
+        std::string fname = SAVE_DIR + conversationTitle + ".txt";
+        std::ifstream file(fname);
+        
+        if (!file.is_open()) {
+            std::cout << "Conversation not found.\n";
+            return false;
+        }
+
+        // Clear current conversation
+        messages.clear();
+        title = conversationTitle;
+        filename = fname;
+
+        std::cout << "\n=== Loading Conversation: " << conversationTitle << " ===\n";
+        
+        std::string line;
+        bool inMessages = false;
+        
+        while (std::getline(file, line)) {
+            // Skip header lines until we reach messages
+            if (line.find("=====") != std::string::npos) {
+                inMessages = true;
+                continue;
+            }
+            
+            if (!inMessages) {
+                std::cout << line << "\n";
+                continue;
+            }
+            
+            // Parse messages in format: [timestamp] type: content
+            if (line.find("[") == 0 && line.find("]") != std::string::npos) {
+                size_t endBracket = line.find("]");
+                std::string timestamp = line.substr(1, endBracket - 1);
+                
+                size_t colonPos = line.find(": ", endBracket);
+                if (colonPos != std::string::npos) {
+                    std::string typeAndContent = line.substr(endBracket + 2);
+                    size_t typeEnd = typeAndContent.find(": ");
+                    
+                    if (typeEnd != std::string::npos) {
+                        std::string type = typeAndContent.substr(0, typeEnd);
+                        std::string content = typeAndContent.substr(typeEnd + 2);
+                        
+                        Message msg;
+                        msg.type = type;
+                        msg.content = content;
+                        msg.timestamp = timestamp;
+                        messages.push_back(msg);
+                        
+                        std::cout << "[" << timestamp << "] " << type << ": " << content << "\n";
+                    }
+                }
+            }
+        }
+        
+        file.close();
+        std::cout << "\n✓ Conversation loaded. You can continue from here.\n";
+        return true;
+    }
 };
 
 #endif

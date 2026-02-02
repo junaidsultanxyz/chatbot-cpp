@@ -12,17 +12,7 @@ void printWelcome() {
     cout << "║   Welcome to C++ Chatbot System!      ║\n";
     cout << "║   Powered by Tmux & System Concepts    ║\n";
     cout << "╚════════════════════════════════════════╝\n\n";
-    cout << "Commands:\n";
-    cout << "  - Ask any question\n";
-    cout << "  - 'list question' - List all questions\n";
-    cout << "  - 'load question <n>' - Load question by number\n";
-    cout << "  - 'list convo' - View conversation history\n";
-    cout << "  - 'load convo <n>' - Load conversation by number\n";
-    cout << "  - 'save' - Save current conversation\n";
-    cout << "  - 'new' - Start new conversation\n";
-    cout << "  - 'clear' - Clear screen\n";
-    cout << "  - 'close' - Close answer panel\n";
-    cout << "  - 'exit' - Quit application\n\n";
+    cout << "Type 'help' to see available commands.\n";
 }
 
 int main() {
@@ -48,6 +38,12 @@ int main() {
         if (chatbot.isClearCommand(userInput)) {
             system("clear");
             printWelcome();
+            continue;
+        }
+        
+        // Check for help command
+        if (chatbot.isHelpCommand(userInput)) {
+            chatbot.showHelp();
             continue;
         }
         
@@ -88,7 +84,7 @@ int main() {
                 int num = stoi(numStr);
                 string convoTitle = Conversation::getConversationByNumber(num);
                 if (!convoTitle.empty()) {
-                    Conversation::loadConversation(convoTitle);
+                    conversation.loadConversationIntoSession(convoTitle);
                 } else {
                     cout << "Invalid conversation number.\n";
                 }

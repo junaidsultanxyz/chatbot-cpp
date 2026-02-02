@@ -16,6 +16,7 @@ private:
     std::vector<std::string> listQuestionCommands;
     std::vector<std::string> saveCommands;
     std::vector<std::string> clearCommands;
+    std::vector<std::string> helpCommands;
 
     void initializeQuestions() {
         // Add your hardcoded questions and answers here
@@ -79,6 +80,7 @@ private:
         listQuestionCommands = {"list question"};
         saveCommands = {"save"};
         clearCommands = {"clear"};
+        helpCommands = {"help"};
     }
 
     bool matchesAnyCommand(const std::string& input, const std::vector<std::string>& commands) {
@@ -136,6 +138,25 @@ public:
 
     bool isClearCommand(const std::string& input) {
         return matchesAnyCommand(input, clearCommands);
+    }
+
+    bool isHelpCommand(const std::string& input) {
+        return matchesAnyCommand(input, helpCommands);
+    }
+
+    void showHelp() {
+        std::cout << "\n=== Available Commands ===\n";
+        std::cout << "  help                  - Show this help message\n";
+        std::cout << "  list question         - List all available questions\n";
+        std::cout << "  load question <n>     - Load and display question by number\n";
+        std::cout << "  list convo            - View saved conversations\n";
+        std::cout << "  load convo <n>        - Load and continue conversation by number\n";
+        std::cout << "  save                  - Save current conversation\n";
+        std::cout << "  new                   - Start new conversation\n";
+        std::cout << "  clear                 - Clear screen\n";
+        std::cout << "  close                 - Close answer panel\n";
+        std::cout << "  exit                  - Quit application\n";
+        std::cout << "\nOr simply ask any question!\n";
     }
 
     void listQuestions() {
