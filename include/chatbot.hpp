@@ -43,6 +43,29 @@ private:
             "Multithreading is the ability of a CPU to execute multiple threads concurrently. "
             "Threads are lightweight processes that share the same memory space, making "
             "communication between them faster than inter-process communication.";
+        
+        questionBank["what are pipes"] = 
+            "Pipes are a method of inter-process communication (IPC) that allow data to flow "
+            "from one process to another. The pipe() system call creates a unidirectional "
+            "communication channel where one process writes to the pipe and another reads from it.";
+        
+        questionBank["fifo pipes"] = 
+            "FIFO (First In First Out) pipes, also called named pipes, are similar to regular "
+            "pipes but have a name in the filesystem. Unlike anonymous pipes, FIFOs can be used "
+            "by unrelated processes and persist beyond the process that created them. Created "
+            "using mkfifo() system call.";
+        
+        questionBank["shared resources"] = 
+            "Shared resources are memory regions or system resources that multiple processes or "
+            "threads can access concurrently. Common examples include shared memory segments, "
+            "files, and hardware devices. Proper synchronization mechanisms like semaphores, "
+            "mutexes, or locks are needed to prevent race conditions.";
+        
+        questionBank["what is exec"] = 
+            "The exec family of functions replaces the current process image with a new program. "
+            "Common variants include: execl(), execv(), execle(), execve(), execlp(), execvp(). "
+            "They differ in how arguments are passed (list vs array) and whether they use PATH "
+            "or environment variables. After exec, the new program runs in the same process ID.";
     }
 
     void initializeCommands() {
