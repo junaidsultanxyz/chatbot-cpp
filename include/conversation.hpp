@@ -6,27 +6,35 @@
 #include <fstream>
 #include <iostream>
 #include <ctime>
+#include <cstdio>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <mutex>
+#include <atomic>
+
+using namespace std;
 
 struct Message {
-    std::string type; // "user" or "bot"
-    std::string content;
-    std::string timestamp;
+    string type;
+    string content;
+    string timestamp;
 };
 
 class Conversation {
 private:
-    std::vector<Message> messages;
-    std::string title;
-    std::string filename;
-    const std::string SAVE_DIR = "conversations/";
+    vector<Message> messages;
+    string title;
+    string filename;
+    const string SAVE_DIR = "conversations/";
+    mutable mutex conversationMutex;
+    atomic<bool> isDirty;
+    time_t lastSaveTime;
 
-    std::string getCurrentTimestamp() {
+    string getCurrentTimestamp() {
         time_t now = time(0);
         char buf[80];
         strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&now));
-        return std::string(buf);
+        return string(buf);
     }
 
     void createDirectoryIfNotExists() {
@@ -37,39 +45,49 @@ private:
     }
 
 public:
-    Conversation() : title(""), filename("") {
+    Conversation() : title(""), filename(""), isDirty(false), lastSaveTime(0) {
         createDirectoryIfNotExists();
     }
 
-    void addMessage(const std::string& type, const std::string& content) {
+    void addMessage(const string& type, const string& content) {
+        lock_guard<mutex> lock(conversationMutex);
         Message msg;
         msg.type = type;
         msg.content = content;
         msg.timestamp = getCurrentTimestamp();
         messages.push_back(msg);
+        isDirty = true;
     }
 
-    void setTitle(const std::string& t) {
+    void setTitle(const string& t) {
+        lock_guard<mutex> lock(conversationMutex);
         title = t;
+        isDirty = true;
     }
 
-    std::string getTitle() const {
+    string getTitle() const {
+        lock_guard<mutex> lock(conversationMutex);
         return title;
     }
 
     bool isEmpty() const {
+        lock_guard<mutex> lock(conversationMutex);
         return messages.empty();
     }
 
-    void saveConversation(const std::string& conversationTitle) {
+    void saveConversation(const string& conversationTitle) {
+        lock_guard<mutex> lock(conversationMutex);
         if (messages.empty()) return;
 
+        string oldFilename = filename;
+        string oldTitle = title;
+        
         title = conversationTitle;
         filename = SAVE_DIR + title + ".txt";
 
-        std::ofstream file(filename);
+        ofstream file(filename);
         if (!file.is_open()) {
-            std::cerr << "Error: Could not save conversation\n";
+            cerr << "Error: Could not save conversation\n";
             return;
         }
 
@@ -82,64 +100,75 @@ public:
         }
 
         file.close();
-        std::cout << "Conversation saved as: " << filename << std::endl;
+
+        if (!oldFilename.empty() && oldTitle.find("autosave_") == 0 && oldFilename != filename) {
+            remove(oldFilename.c_str());
+            cout << "Conversation renamed to: " << filename << endl;
+        } else {
+            cout << "Conversation saved as: " << filename << endl;
+        }
+        
+        isDirty = false;
+        lastSaveTime = time(0);
     }
 
     void clear() {
+        lock_guard<mutex> lock(conversationMutex);
         messages.clear();
         title = "";
         filename = "";
+        isDirty = false;
     }
 
-    static std::vector<std::string> listConversations() {
-        const std::string SAVE_DIR = "conversations/";
+    static vector<string> listConversations() {
+        const string SAVE_DIR = "conversations/";
         DIR* dir = opendir(SAVE_DIR.c_str());
-        std::vector<std::string> conversations;
+        vector<string> conversations;
         
         if (!dir) {
-            std::cout << "No previous conversations found.\n";
+            cout << "No previous conversations found.\n";
             return conversations;
         }
 
-        std::cout << "\n=== Previous Conversations ===\n";
+        cout << "\n=== Previous Conversations ===\n";
         struct dirent* entry;
         int count = 0;
         
         while ((entry = readdir(dir)) != nullptr) {
-            std::string fname = entry->d_name;
+            string fname = entry->d_name;
             if (fname.length() > 4 && fname.substr(fname.length() - 4) == ".txt") {
-                std::string title = fname.substr(0, fname.length() - 4);
+                string title = fname.substr(0, fname.length() - 4);
                 conversations.push_back(title);
-                std::cout << ++count << ". " << title << "\n";
+                cout << ++count << ". " << title << "\n";
             }
         }
         
         closedir(dir);
         if (count == 0) {
-            std::cout << "No conversations found.\n";
+            cout << "No conversations found.\n";
         }
         return conversations;
     }
 
-    static void loadConversation(const std::string& conversationTitle) {
-        std::string filename = "conversations/" + conversationTitle + ".txt";
-        std::ifstream file(filename);
+    static void loadConversation(const string& conversationTitle) {
+        string filename = "conversations/" + conversationTitle + ".txt";
+        ifstream file(filename);
         
         if (!file.is_open()) {
-            std::cout << "Conversation not found.\n";
+            cout << "Conversation not found.\n";
             return;
         }
 
-        std::cout << "\n=== Loading Conversation ===\n";
-        std::string line;
-        while (std::getline(file, line)) {
-            std::cout << line << "\n";
+        cout << "\n=== Loading Conversation ===\n";
+        string line;
+        while (getline(file, line)) {
+            cout << line << "\n";
         }
         file.close();
     }
 
-    static std::string getConversationByNumber(int number) {
-        const std::string SAVE_DIR = "conversations/";
+    static string getConversationByNumber(int number) {
+        const string SAVE_DIR = "conversations/";
         DIR* dir = opendir(SAVE_DIR.c_str());
         
         if (!dir) {
@@ -148,10 +177,10 @@ public:
 
         struct dirent* entry;
         int count = 0;
-        std::string result;
+        string result;
         
         while ((entry = readdir(dir)) != nullptr) {
-            std::string fname = entry->d_name;
+            string fname = entry->d_name;
             if (fname.length() > 4 && fname.substr(fname.length() - 4) == ".txt") {
                 if (++count == number) {
                     result = fname.substr(0, fname.length() - 4);
@@ -164,50 +193,47 @@ public:
         return result;
     }
 
-    bool loadConversationIntoSession(const std::string& conversationTitle) {
-        std::string fname = SAVE_DIR + conversationTitle + ".txt";
-        std::ifstream file(fname);
+    bool loadConversationIntoSession(const string& conversationTitle) {
+        string fname = SAVE_DIR + conversationTitle + ".txt";
+        ifstream file(fname);
         
         if (!file.is_open()) {
-            std::cout << "Conversation not found.\n";
+            cout << "Conversation not found.\n";
             return false;
         }
 
-        // Clear current conversation
         messages.clear();
         title = conversationTitle;
         filename = fname;
 
-        std::cout << "\n=== Loading Conversation: " << conversationTitle << " ===\n";
+        cout << "\n=== Loading Conversation: " << conversationTitle << " ===\n";
         
-        std::string line;
+        string line;
         bool inMessages = false;
         
-        while (std::getline(file, line)) {
-            // Skip header lines until we reach messages
-            if (line.find("=====") != std::string::npos) {
+        while (getline(file, line)) {
+            if (line.find("=====") != string::npos) {
                 inMessages = true;
                 continue;
             }
             
             if (!inMessages) {
-                std::cout << line << "\n";
+                cout << line << "\n";
                 continue;
             }
             
-            // Parse messages in format: [timestamp] type: content
-            if (line.find("[") == 0 && line.find("]") != std::string::npos) {
+            if (line.find("[") == 0 && line.find("]") != string::npos) {
                 size_t endBracket = line.find("]");
-                std::string timestamp = line.substr(1, endBracket - 1);
+                string timestamp = line.substr(1, endBracket - 1);
                 
                 size_t colonPos = line.find(": ", endBracket);
-                if (colonPos != std::string::npos) {
-                    std::string typeAndContent = line.substr(endBracket + 2);
+                if (colonPos != string::npos) {
+                    string typeAndContent = line.substr(endBracket + 2);
                     size_t typeEnd = typeAndContent.find(": ");
                     
-                    if (typeEnd != std::string::npos) {
-                        std::string type = typeAndContent.substr(0, typeEnd);
-                        std::string content = typeAndContent.substr(typeEnd + 2);
+                    if (typeEnd != string::npos) {
+                        string type = typeAndContent.substr(0, typeEnd);
+                        string content = typeAndContent.substr(typeEnd + 2);
                         
                         Message msg;
                         msg.type = type;
@@ -215,15 +241,56 @@ public:
                         msg.timestamp = timestamp;
                         messages.push_back(msg);
                         
-                        std::cout << "[" << timestamp << "] " << type << ": " << content << "\n";
+                        cout << "[" << timestamp << "] " << type << ": " << content << "\n";
                     }
                 }
             }
         }
         
         file.close();
-        std::cout << "\n✓ Conversation loaded. You can continue from here.\n";
+        cout << "\n✓ Conversation loaded. You can continue from here.\n";
         return true;
+    }
+
+    void autoSave() {
+        lock_guard<mutex> lock(conversationMutex);
+        
+        if (!isDirty || messages.empty()) {
+            return;
+        }
+
+        string saveTitle = title;
+        if (saveTitle.empty()) {
+            saveTitle = "autosave_" + to_string(time(0));
+            title = saveTitle;
+        }
+
+        filename = SAVE_DIR + saveTitle + ".txt";
+        ofstream file(filename);
+        if (!file.is_open()) {
+            return;
+        }
+
+        file << "Title: " << saveTitle << "\n";
+        file << "Date: " << getCurrentTimestamp() << "\n";
+        file << "=====================================\n\n";
+
+        for (const auto& msg : messages) {
+            file << "[" << msg.timestamp << "] " << msg.type << ": " << msg.content << "\n\n";
+        }
+
+        file.close();
+        isDirty = false;
+        lastSaveTime = time(0);
+    }
+
+    bool needsAutoSave() const {
+        return isDirty.load() && !messages.empty();
+    }
+
+    bool hasTitleForAutoSave() const {
+        lock_guard<mutex> lock(conversationMutex);
+        return !title.empty();
     }
 };
 

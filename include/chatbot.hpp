@@ -6,20 +6,21 @@
 #include <vector>
 #include "utils.hpp"
 
+using namespace std;
+
 class Chatbot {
 private:
-    std::map<std::string, std::string> questionBank;
-    std::vector<std::string> exitCommands;
-    std::vector<std::string> closeCommands;
-    std::vector<std::string> newConversationCommands;
-    std::vector<std::string> listCommands;
-    std::vector<std::string> listQuestionCommands;
-    std::vector<std::string> saveCommands;
-    std::vector<std::string> clearCommands;
-    std::vector<std::string> helpCommands;
+    map<string, string> questionBank;
+    vector<string> exitCommands;
+    vector<string> closeCommands;
+    vector<string> newConversationCommands;
+    vector<string> listCommands;
+    vector<string> listQuestionCommands;
+    vector<string> saveCommands;
+    vector<string> clearCommands;
+    vector<string> helpCommands;
 
     void initializeQuestions() {
-        // Add your hardcoded questions and answers here
         questionBank["what is c++"] = 
             "C++ is a high-performance programming language that supports object-oriented, "
             "procedural, and generic programming. It was developed by Bjarne Stroustrup "
@@ -83,10 +84,10 @@ private:
         helpCommands = {"help"};
     }
 
-    bool matchesAnyCommand(const std::string& input, const std::vector<std::string>& commands) {
-        std::string lowerInput = toLower(trim(input));
+    bool matchesAnyCommand(const string& input, const vector<string>& commands) {
+        string lowerInput = toLower(trim(input));
         for (const auto& cmd : commands) {
-            if (lowerInput.find(cmd) != std::string::npos) {
+            if (lowerInput.find(cmd) != string::npos) {
                 return true;
             }
         }
@@ -99,75 +100,74 @@ public:
         initializeCommands();
     }
 
-    std::string findAnswer(const std::string& question) {
-        std::string lowerQuestion = toLower(trim(question));
+    string findAnswer(const string& question) {
+        string lowerQuestion = toLower(trim(question));
         
-        // Try to find exact or partial match
         for (const auto& pair : questionBank) {
-            if (lowerQuestion.find(pair.first) != std::string::npos) {
+            if (lowerQuestion.find(pair.first) != string::npos) {
                 return pair.second;
             }
         }
         
-        return ""; // No answer found
+        return "";
     }
 
-    bool isExitCommand(const std::string& input) {
+    bool isExitCommand(const string& input) {
         return matchesAnyCommand(input, exitCommands);
     }
 
-    bool isCloseCommand(const std::string& input) {
+    bool isCloseCommand(const string& input) {
         return matchesAnyCommand(input, closeCommands);
     }
 
-    bool isNewConversationCommand(const std::string& input) {
+    bool isNewConversationCommand(const string& input) {
         return matchesAnyCommand(input, newConversationCommands);
     }
 
-    bool isListCommand(const std::string& input) {
+    bool isListCommand(const string& input) {
         return matchesAnyCommand(input, listCommands);
     }
 
-    bool isListQuestionCommand(const std::string& input) {
+    bool isListQuestionCommand(const string& input) {
         return matchesAnyCommand(input, listQuestionCommands);
     }
 
-    bool isSaveCommand(const std::string& input) {
+    bool isSaveCommand(const string& input) {
         return matchesAnyCommand(input, saveCommands);
     }
 
-    bool isClearCommand(const std::string& input) {
+    bool isClearCommand(const string& input) {
         return matchesAnyCommand(input, clearCommands);
     }
 
-    bool isHelpCommand(const std::string& input) {
+    bool isHelpCommand(const string& input) {
         return matchesAnyCommand(input, helpCommands);
     }
 
     void showHelp() {
-        std::cout << "\n=== Available Commands ===\n";
-        std::cout << "  help                  - Show this help message\n";
-        std::cout << "  list question         - List all available questions\n";
-        std::cout << "  load question <n>     - Load and display question by number\n";
-        std::cout << "  list convo            - View saved conversations\n";
-        std::cout << "  load convo <n>        - Load and continue conversation by number\n";
-        std::cout << "  save                  - Save current conversation\n";
-        std::cout << "  new                   - Start new conversation\n";
-        std::cout << "  clear                 - Clear screen\n";
-        std::cout << "  close                 - Close answer panel\n";
-        std::cout << "  exit                  - Quit application\n";
-        std::cout << "\nOr simply ask any question!\n";
+        cout << "\n=== Available Commands ===\n";
+        cout << "  help                  - Show this help message\n";
+        cout << "  list question         - List all available questions\n";
+        cout << "  load question <n>     - Load and display question by number\n";
+        cout << "  list convo            - View saved conversations\n";
+        cout << "  load convo <n>        - Load and continue conversation by number\n";
+        cout << "  save                  - Save current conversation\n";
+        cout << "  new                   - Start new conversation\n";
+        cout << "  clear                 - Clear screen\n";
+        cout << "  close                 - Close answer panel\n";
+        cout << "  exit                  - Quit application\n";
+        cout << "\nOr simply ask any question!\n";
     }
 
     void listQuestions() {
-        std::cout << "\n=== Available Questions ===\n";
+        cout << "\n=== Available Questions ===\n";
         int count = 0;
         for (const auto& pair : questionBank) {
-            std::cout << ++count << ". " << pair.first << "\n";
+            cout << ++count << ". " << pair.first << "\n";
         }
     }
 
-    std::string getQuestionByNumber(int number) {
+    string getQuestionByNumber(int number) {
         if (number < 1 || number > questionBank.size()) {
             return "";
         }
@@ -181,7 +181,7 @@ public:
         return "";
     }
 
-    void addQuestion(const std::string& question, const std::string& answer) {
+    void addQuestion(const string& question, const string& answer) {
         questionBank[toLower(question)] = answer;
     }
 };
