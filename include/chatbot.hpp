@@ -21,10 +21,6 @@ private:
     vector<string> helpCommands;
 
     void initializeQuestions() {
-        questionBank["what is c++"] = 
-            "C++ is a high-performance programming language that supports object-oriented, "
-            "procedural, and generic programming. It was developed by Bjarne Stroustrup "
-            "as an extension of C.";
         
         questionBank["what is tmux"] = 
             "Tmux is a terminal multiplexer that allows you to create, access, and control "
@@ -39,10 +35,6 @@ private:
             "fork() is a system call that creates a new process by duplicating the calling "
             "process. The new process is called the child process, and it runs concurrently "
             "with the parent process.";
-        
-        questionBank["how are you"] = 
-            "I'm doing great! I'm a C++ chatbot built to answer your questions about "
-            "programming and operating systems. How can I help you today?";
         
         questionBank["what is multithreading"] = 
             "Multithreading is the ability of a CPU to execute multiple threads concurrently. "
@@ -71,6 +63,24 @@ private:
             "Common variants include: execl(), execv(), execle(), execve(), execlp(), execvp(). "
             "They differ in how arguments are passed (list vs array) and whether they use PATH "
             "or environment variables. After exec, the new program runs in the same process ID.";
+        
+        questionBank["file operations"] = 
+            "File operations in Unix/Linux include: open() to open files, read() to read data, "
+            "write() to write data, close() to close files, lseek() to move file pointer, "
+            "stat() to get file information, and unlink() to delete files. File descriptors "
+            "(integers) are used to reference open files. Standard descriptors: 0=stdin, 1=stdout, 2=stderr.";
+        
+        questionBank["what are semaphores"] = 
+            "Semaphores are synchronization primitives used to control access to shared resources. "
+            "They maintain a counter: P() (wait/down) decrements it, V() (signal/up) increments it. "
+            "Binary semaphores (0 or 1) act like locks. Counting semaphores allow multiple access. "
+            "POSIX provides sem_init(), sem_wait(), sem_post(), sem_destroy(). Used to prevent race conditions.";
+        
+        questionBank["process management"] = 
+            "Process management involves creating (fork()), executing (exec()), terminating (exit()), "
+            "and monitoring processes. Key system calls: fork() creates child process, wait()/waitpid() "
+            "waits for child termination, getpid() returns process ID, getppid() returns parent ID, "
+            "kill() sends signals to processes. Process states: running, waiting, stopped, zombie.";
     }
 
     void initializeCommands() {
